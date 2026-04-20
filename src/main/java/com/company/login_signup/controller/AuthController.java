@@ -1,4 +1,5 @@
 package com.company.login_signup.controller;
+import com.company.login_signup.dto.LoginRequest;
 import com.company.login_signup.dto.SignupRequest;
 import com.company.login_signup.service.AuthService;
 import jakarta.validation.Valid;
@@ -16,5 +17,10 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody SignupRequest request) {
         return ResponseEntity.ok(authService.signup(request));
+    }
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request)
+    {
+        return ResponseEntity.ok((authService.login(request)));
     }
 }
