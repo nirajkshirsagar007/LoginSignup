@@ -1,8 +1,12 @@
 package com.company.login_signup.service;
+import com.company.login_signup.dto.LoginRequest;
+import com.company.login_signup.dto.LoginResponse;
 import com.company.login_signup.dto.SignupRequest;
 import com.company.login_signup.entity.User;
 import com.company.login_signup.repository.UserRepository;
+import com.company.login_signup.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,6 +14,8 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public String signup(SignupRequest request) {
 
@@ -20,7 +26,7 @@ public class AuthService {
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
-                .password(request.getPassword())   // hash later in PR4
+                .password(passwordEncoder.encode(request.getPassword()))
                 .role("USER")
                 .build();
 
@@ -28,4 +34,27 @@ public class AuthService {
 
         return "User registered successfully";
     }
+
+    public LoginResponse login(LoginRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        boolean matches = passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword()
+        );
+
+        if (!matches) {
+            throw new RuntimeException("Invalid credentials");
+        }
+        String token = jwtService.generateToken(user.getEmail());
+
+        return new LoginResponse(
+                "Login successful",
+                token,
+                user.getEmail(),
+                user.getRole());
+    }
+
 }
